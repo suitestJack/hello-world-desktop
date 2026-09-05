@@ -95,6 +95,16 @@ button {
   margin-right: 5px;
 }
 
+.click-me {
+  margin-top: 1.5em;
+  padding: 0.8em 2em;
+}
+
+#click-me-msg {
+  text-align: center;
+  min-height: 24px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
