@@ -83,7 +83,10 @@ pipeline {
     post {
         success {
             script {
-                if (env.BRANCH_NAME ==~ /feature\/.*|bugfix\/.*|chore\/.*/) {
+                // In a multibranch job, PR builds report BRANCH_NAME as "PR-<n>", not
+                // the source branch name — CHANGE_ID (set only for PR builds) is the
+                // correct signal that this build corresponds to an open pull request.
+                if (env.CHANGE_ID) {
                     // Tests passed on a feature branch — auto-merge to dev and move ticket to In Review
                     sh 'gh pr merge --squash --auto'
                     if (env.JIRA_TICKET) {
@@ -94,7 +97,7 @@ pipeline {
         }
         failure {
             script {
-                if (env.BRANCH_NAME ==~ /feature\/.*|bugfix\/.*|chore\/.*/ && env.JIRA_TICKET) {
+                if (env.CHANGE_ID && env.JIRA_TICKET) {
                     // Build failed — comment on the ticket and move back to In Progress
                     jiraCommentAndTransition(
                         env.JIRA_TICKET,
