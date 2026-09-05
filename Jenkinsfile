@@ -19,7 +19,10 @@ pipeline {
             steps {
                 script {
                     // Branch convention: feature/HWD2-42-short-description (see frontend-agent.md)
-                    def m = (env.BRANCH_NAME =~ /([A-Z][A-Z0-9]*-[0-9]+)/)
+                    // On a PR build, BRANCH_NAME is "PR-<n>" (which itself looks like a
+                    // ticket key) — CHANGE_BRANCH holds the actual source branch name.
+                    def sourceBranch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+                    def m = (sourceBranch =~ /([A-Z][A-Z0-9]*-[0-9]+)/)
                     env.JIRA_TICKET = m ? m[0][1] : ''
                 }
             }
@@ -83,9 +86,14 @@ pipeline {
     post {
         success {
             script {
-                if (env.BRANCH_NAME ==~ /feature\/.*|bugfix\/.*|chore\/.*/) {
-                    // Tests passed on a feature branch — auto-merge to dev and move ticket to In Review
-                    sh 'gh pr merge --squash --auto'
+                // In a multibranch job, PR builds report BRANCH_NAME as "PR-<n>", not
+                // the source branch name — CHANGE_ID (set only for PR builds) is the
+                // correct signal that this build corresponds to an open pull request.
+                if (env.CHANGE_ID) {
+                    // Tests passed on a feature branch — auto-merge to dev and move ticket to In Review.
+                    // PR builds check out a detached-HEAD merge ref, so gh can't infer the PR from
+                    // the current branch — pass CHANGE_ID explicitly.
+                    sh 'gh pr merge "$CHANGE_ID" --squash --auto'
                     if (env.JIRA_TICKET) {
                         jiraTransitionByName(env.JIRA_TICKET, 'In Review')
                     }
@@ -94,7 +102,7 @@ pipeline {
         }
         failure {
             script {
-                if (env.BRANCH_NAME ==~ /feature\/.*|bugfix\/.*|chore\/.*/ && env.JIRA_TICKET) {
+                if (env.CHANGE_ID && env.JIRA_TICKET) {
                     // Build failed — comment on the ticket and move back to In Progress
                     jiraCommentAndTransition(
                         env.JIRA_TICKET,
