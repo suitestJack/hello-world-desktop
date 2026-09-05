@@ -105,6 +105,11 @@ button {
   min-height: 24px;
 }
 
+#click-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;

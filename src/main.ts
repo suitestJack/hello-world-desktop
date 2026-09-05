@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 let greetInputEl: HTMLInputElement | null;
 let greetMsgEl: HTMLElement | null;
-let clickMeMsgEl: HTMLElement | null;
+let clickCountEl: HTMLElement | null;
 let clickCount = 0;
 
 async function greet() {
@@ -14,18 +14,22 @@ async function greet() {
   }
 }
 
+function renderClickCount() {
+  if (clickCountEl) {
+    clickCountEl.textContent = String(clickCount);
+  }
+}
+
 function handleClickMe() {
   clickCount += 1;
-  if (clickMeMsgEl) {
-    clickMeMsgEl.textContent =
-      clickCount === 1 ? "Clicked 1 time" : `Clicked ${clickCount} times`;
-  }
+  renderClickCount();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
-  clickMeMsgEl = document.querySelector("#click-me-msg");
+  clickCountEl = document.querySelector("#click-count");
+  renderClickCount();
   document
     .querySelector("#click-me-btn")
     ?.addEventListener("click", handleClickMe);
