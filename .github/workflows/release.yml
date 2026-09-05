@@ -11,6 +11,12 @@ on:
     branches:
       - prod
 
+# The auto-provided GITHUB_TOKEN defaults to read-only contents access on this repo,
+# which is enough to check out code but not enough for tauri-action to create a
+# release — it needs this explicitly declared.
+permissions:
+  contents: write
+
 jobs:
   release:
     strategy:
